@@ -79,7 +79,7 @@ SEL WK_UnregisterSchemeSelector() {
 
 + (BOOL)canInitWithRequest:(NSURLRequest *)request
 {
-    return [[[request URL] host] isEqualToString:@"ionic.local"];
+    return [[[request URL] host] isEqualToString:@"localhost"];
 }
 
 + (NSURLRequest*)canonicalRequestForRequest:(NSURLRequest*)request
@@ -105,7 +105,7 @@ SEL WK_UnregisterSchemeSelector() {
 
 - (NSDictionary*)headerWithMime:(NSString*)mime size:(NSUInteger)size
 {
-    return @{@"Server": @"ionic.local",
+    return @{@"Server": @"localhost",
              @"Connection": @"Close",
              @"Content-type": mime,
              @"Content-Length": [NSString stringWithFormat:@"%lu", (unsigned long)size] };
@@ -339,7 +339,7 @@ static void * KVOContext = &KVOContext;
     if ([self canLoadRequest:request]) { // can load, differentiate between file urls and other schemes
         if (request.URL.fileURL) {
 
-            NSURL *url = [[NSURL URLWithString:@"http://ionic.local"] URLByAppendingPathComponent:request.URL.path];
+            NSURL *url = [[NSURL URLWithString:@"http://localhost:52025"] URLByAppendingPathComponent:request.URL.path];
             NSURLRequest *request2 = [NSURLRequest requestWithURL:url];
             return [(WKWebView*)_engineWebView loadRequest:request2];
         } else {
