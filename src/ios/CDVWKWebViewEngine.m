@@ -395,6 +395,29 @@ static void * KVOContext = &KVOContext;
      wkWebView.configuration.preferences.javaScriptCanOpenWindowsAutomatically = [settings cordovaBoolSettingForKey:@"JavaScriptCanOpenWindowsAutomatically" default:NO];
      */
 
+     /* DYRT
+     * Swizzle _startAssistingNode to make it seem like the user is interacting.
+     * This replicates the behavior of UIWebView's keyboardDisplayRequiresUserAction property.
+     *
+     * See:
+     * - https://issues.apache.org/jira/browse/CB-10376
+     * - https://bugs.webkit.org/show_bug.cgi?id=142757#c3
+     * - https://github.com/Telerik-Verified-Plugins/WKWebView/issues/184
+     * - https://github.com/YetiCGN/cordova-plugin-wkwebview-engine/commit/eb485aaa237ce3c5ea123e8350115948608701a5
+     */
+    BOOL keyboardDisplayRequiresUserAction = [settings cordovaBoolSettingForKey:@"KeyboardDisplayRequiresUserAction" defaultValue:YES];
+
+    if (!keyboardDisplayRequiresUserAction) {
+        SEL sel = sel_getUid("_startAssistingNode:userIsInteracting:blurPreviousNode:userObject:");
+        Class WKContentView = NSClassFromString(@"WKContentView");
+        Method method = class_getInstanceMethod(WKContentView, sel);
+        IMP originalImp = method_getImplementation(method);
+        IMP imp = imp_implementationWithBlock(^void(id me, void* arg0, BOOL arg1, BOOL arg2, id arg3) {
+            ((void (*)(id, SEL, void*, BOOL, BOOL, id))originalImp)(me, sel, arg0, TRUE, arg2, arg3);
+        });
+        method_setImplementation(method, imp);
+    }
+
     // By default, DisallowOverscroll is false (thus bounce is allowed)
     BOOL bounceAllowed = !([settings cordovaBoolSettingForKey:@"DisallowOverscroll" defaultValue:NO]);
 
